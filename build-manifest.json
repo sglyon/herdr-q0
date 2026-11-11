@@ -1,0 +1,15 @@
+{
+  "qmk_commit": "d194c077ed964195ec16d255c7a4b89a794cf03b",
+  "target": "keychron/q0/plus:herdr",
+  "compiler": "arm-none-eabi-gcc (Arm GNU Toolchain 14.3.Rel1 (Build arm-14.174)) 14.3.1 20250623",
+  "files": {
+    "firmware/COPYING": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+    "firmware/config.h": "4c23fca3c2a27263c3dced4b5f3090d637362fdac978bd1c4a34dc8ba5b4198f",
+    "firmware/keychron_q0_plus_herdr.bin": "7b19b53e00c752f648a62bc79522d8031fa2148867424c45f53277ed15cf3853",
+    "firmware/keychron_q0_plus_herdr.elf": "bbf3441b07db81d19186413371fdef88fab25aa50aaead92060f620d3a08b2e6",
+    "firmware/keymap.c": "a817aed0ec8ede3c452752e1762117c6e42e2b694a133170513289bd714578b1",
+    "firmware/protocol.h": "f6300a1d9664360d6aa086f628a8dd0271f507076882d0fa975ff90ca7096e46",
+    "firmware/rules.mk": "3b2408910359441523c56bdf49ca003f857030cf76cf1cf774e1b83d02f06969",
+    "firmware/via-definition.json": "a9ed2a8933f88145b039dda7959d4c19bb99a07feb5ea76dc42a5532f0ce2e5b"
+  }
+}
