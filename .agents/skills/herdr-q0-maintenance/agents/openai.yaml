@@ -1,0 +1,3 @@
+interface:
+  display_name: "Herdr Q0 Maintenance"
+  short_description: "Maintain Herdr agent slots, bridge, and Q0 firmware"

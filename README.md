@@ -211,6 +211,10 @@ herdr-app do layout.switch --name main
 
 Remove only the personal `q0-agents` mod/layout when no longer needed. If a login service was installed, stop it and remove `~/Library/LaunchAgents/dev.sglyon.herdr-q0.plist`. Agent terminals remain running. To remove the custom firmware too, flash the official Q0 Plus recovery image.
 
+## Agent maintenance
+
+[AGENTS.md](AGENTS.md) maps the code, behavioral invariants, and validation/deployment boundaries. The repository-local [herdr-q0-maintenance skill](.agents/skills/herdr-q0-maintenance/SKILL.md) adds focused runtime and hardware procedures for future agents. Keep this guidance with the checkout; no global skill installation is required to read and use it.
+
 ## License
 
 The bridge, mod, helpers, and tests are MIT licensed. The QMK-derived firmware is GPL-2.0-or-later; see `firmware/COPYING`. Its corresponding modified source and pinned upstream reference are included.
