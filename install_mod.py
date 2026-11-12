@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+from install_sidebar import install_sidebar, sidebar_layout
 
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--app-path', type=Path, help='Herdr.app bundle for foreground activation')
@@ -35,6 +36,7 @@ runtime.touch(mode=0o600,exist_ok=True)
 runtime.chmod(0o600)
 (dest/'q0-owner.json').write_text(json.dumps({'source':str(root),'version':1}))
 subprocess.run(['herdr-app','check',str(dest)],check=True)
+install_sidebar(root, home)
 status=json.loads(subprocess.check_output(['herdr-app','status']))
 name='q0-agents'
 layout=home/'layouts'/f'{name}.json'
@@ -52,4 +54,8 @@ else:
     layout.write_text(json.dumps(data,indent=2)+'\n')
     subprocess.run(['herdr-app','do','layout.set',json.dumps({'layout':data})],check=True)
     shutil.copy2(layout,root/'q0-agents-layout.json')
-print('Installed q0-agents mod and personal layout. Shipped files unchanged. No firmware flashed.')
+data=json.loads(layout.read_text())
+decorated=sidebar_layout(data)
+if decorated != data:
+    subprocess.run(['herdr-app','do','layout.set',json.dumps({'layout':decorated})],check=True)
+print('Installed Q0 controller and Agents sidebar badges. Shipped files unchanged. No firmware flashed.')

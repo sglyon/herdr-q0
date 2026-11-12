@@ -12,6 +12,7 @@ Work from the checkout root (`git rev-parse --show-toplevel`). Read [AGENTS.md](
 | Request | Start here | Deployment consequence |
 | --- | --- | --- |
 | New/closed agents, stable keys, overflow | `mod/model.js`, model/lifecycle JS tests | Install mod; no flash |
+| Agents-list badges / Herdr update compatibility | `sidebar/badges.js`, `install_sidebar.py`, installed `mods/agents/main.js` | Regenerate personal sidebar with installer; native-check and inspect |
 | Panel controls, live status, unread completion | `mod/main.js`, installed Herdr API definitions | Install, native-check, inspect screenshot |
 | M1 steals focus, agent activation, stale USB state | `bridge.py`, `bridge_lifecycle.py`, bridge-loop Python tests | Pause/resume management; no flash |
 | Login behavior, custom app/checkout location | `configure_service.py`, service tests | Regenerate/install service only within requested scope |

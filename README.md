@@ -28,9 +28,22 @@ Open Herdr, then install the personal mod and layout:
 .venv/bin/python install_mod.py
 ```
 
-This copies `mod/` into `~/.config/herdr-app/mods/q0-agents`, runs Herdr's native validator, and creates/switches to a personal `q0-agents` layout cloned from `main`. It preserves the shipped layouts and mods. Re-running the installer updates only this project's mod. `HERDR_APP_HOME` is supported for a non-default Herdr configuration directory.
+This copies `mod/` into `~/.config/herdr-app/mods/q0-agents`, runs Herdr's native validator, and creates/switches to a personal `q0-agents` layout cloned from `main`. It preserves the shipped layouts and mods. It also creates a personal `q0-agents-sidebar` copy of Herdr's Agents mod and connects it only within the personal Q0 layout. Assigned agents show a compact Q0 number badge, including nested agents and the collapsed sidebar. Badges follow terminal addresses, so sorting and title changes do not change their meaning; number mode dims them. Re-running the installer updates this project's personal mods. `HERDR_APP_HOME` is supported for a non-default Herdr configuration directory.
 
 Installation configures the panel to start and supervise the USB bridge automatically. It runs only while the panel exports fresh state; closing Herdr or removing the panel makes it exit once its heartbeat expires after three seconds; an in-flight USB or desktop command can delay process exit. The panel retries a stopped bridge every five seconds. No login service is required. Installation does not flash the keyboard. Pass `--app-path /path/to/Herdr.app` to the installer for a custom app location.
+
+## After a Herdr update
+
+Herdr preserves personal mod clones; it does not automatically merge new Agents-panel features into them. Refresh our personal sidebar from the newly installed Herdr version by running:
+
+```sh
+cd ~/src/herdr-q0
+.venv/bin/python install_mod.py
+```
+
+Use your checkout path and pass `--app-path` again if the app bundle is in a custom location. The installer reads the current shipped `mods/agents/main.js`, applies the small extension in `install_sidebar.py`, copies our badge renderer/model, and validates the result with Herdr. It preserves Q0 assignments and mode and leaves the shipped Agents mod and other layouts unchanged. There is no firmware update in this process.
+
+The repository stores the badge renderer and insertion patch, rather than a full frozen copy of Herdr's panel. Expected insertion points must match exactly once. If an update changes those points, installation stops with `Herdr Agents mod changed; review Q0 sidebar patch…` before replacing the sidebar code. Adapt `install_sidebar.py` against the new shipped source, run the tests/native validator, then reinstall. Do not patch Herdr's shipped mod directly or edit only the generated personal copy. The personal sidebar's owner marker records the upstream source hash used for the last installation.
 
 ## Back up your current configuration
 

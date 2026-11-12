@@ -35,6 +35,8 @@ Run relevant JS tests, then:
 herdr-app status
 ```
 
+The installer runs the native validator for both the controller and the personal Agents sidebar. The sidebar is generated from the installed shipped `agents` source plus `install_sidebar.py`; rerun installation after Herdr updates to pick up upstream changes. Exact-match insertion points reject incompatible structure before replacing sidebar code. Read badges from the shared assignment store by full terminal address, including nested agents; never match titles or list positions. Keep the sort popup self-reference pointing to `q0-agents-sidebar`. Do not edit the shipped mod or treat generated sidebar code as repository source.
+
 The installer runs the native validator. Check the installed mod's owner marker/source path if multiple checkouts exist. Capture `herdr-app shot` to an ignored `.local/` file and actually inspect it after UI changes. Do not commit terminal screenshots or copied runtime bindings.
 
 Source uses `agents()` for Herdr's unread/seen state and raw terminal status for errors/sub-agents. `agents()` does not include every background terminal; do not accidentally drop raw status-reporting children when changing discovery. A new agent becomes eligible once it reports status.

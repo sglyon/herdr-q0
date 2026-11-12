@@ -18,6 +18,7 @@ Read [README.md](README.md) for installation and controls, and use the repo-loca
 | --- | --- |
 | Agent discovery, slot allocation, revisions | `mod/model.js` |
 | Native panel, shared persistence, state export, commands | `mod/main.js`, `mod/mod.json` |
+| Agents sidebar badges and upstream refresh | `sidebar/badges.js`, `install_sidebar.py` |
 | USB framing, freshness, focus, bridge lifecycle | `bridge.py`, `bridge_lifecycle.py` |
 | Keys, final-frame LEDs, mode acknowledgement | `firmware/keymap.c`, `firmware/protocol.h`, `firmware/config.h` |
 | VIA layout/key labels and build options | `firmware/via-definition.json`, `firmware/rules.mk` |
@@ -26,6 +27,8 @@ Read [README.md](README.md) for installation and controls, and use the repo-loca
 | Read-only VIA backup / explicitly requested restore | `via_config.py` |
 | Pinned build and artifact hashes; never flashes | `build.py`, `build-manifest.json` |
 | Observable behavior and fixtures | `tests/`, `TESTING.md` |
+
+The personal `q0-agents-sidebar` is generated from the current installed Herdr Agents mod plus the small insertion patch in `install_sidebar.py` and renderer in `sidebar/badges.js`. Regenerate it with `install_mod.py` after Herdr updates. Exact-match insertion points fail closed on upstream structure changes. Track our patch/renderer, not the entire generated Herdr source. Keep the popup routed to the personal clone, retain upstream grouping/pinning/sub-agent/navigation behavior, and update only the personal Q0 layout. Badge numbers come from the existing shared assignment store by full terminal address, never titles or row position. Badge rendering must never write assignments or invent a number for an overflow agent.
 
 ## Behavior to preserve
 
