@@ -71,7 +71,7 @@ def atomic_json(path: Path, value: dict):
     os.chmod(temp, 0o600)
     temp.replace(path)
 
-def run(directory: Path, app_cli: str, app_path: str):
+def run(directory: Path, app_cli: str, app_path: str, managed: bool = False):
     lock = (directory / ".bridge.lock").open("a")
     try: fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
@@ -93,6 +93,8 @@ def run(directory: Path, app_cli: str, app_path: str):
                 s = read_snapshot(directory / ".state.json")
             except (OSError, ValueError, TypeError, KeyError):
                 s = None
+            if managed and (s is None or (directory / ".bridge-paused").exists()):
+                break
             if h:
                 try:
                     if now >= next_send:
@@ -123,13 +125,17 @@ def run(directory: Path, app_cli: str, app_path: str):
             if h:
                 try: h.write(b"\0" + packet(4))
                 finally: h.close()
-        finally: lock.close()
+        finally:
+            if managed:
+                atomic_json(directory / ".bridge-status.json", {"timestamp": int(time.time()*1000), "message": "Bridge stopped · panel inactive or paused"})
+            lock.close()
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--directory", type=Path, default=Path(os.environ.get('HERDR_APP_HOME',str(Path.home()/'.config/herdr-app'))).expanduser()/"mods/q0-agents")
     p.add_argument("--app-cli", default="herdr-app")
     p.add_argument("--app-path", default=str(Path.home()/"Applications/Herdr.app"))
+    p.add_argument("--managed", action="store_true", help="Exit when the panel heartbeat expires or management is paused")
     p.add_argument("--probe", action="store_true", help="Only check for custom firmware; never change settings")
     a = p.parse_args()
     if a.probe:
@@ -139,5 +145,5 @@ if __name__ == "__main__":
         except OSError as e: raise SystemExit(str(e))
         finally: h.close()
     else:
-        try: run(a.directory, a.app_cli, a.app_path)
+        try: run(a.directory, a.app_cli, a.app_path, managed=a.managed)
         except KeyboardInterrupt: pass

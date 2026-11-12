@@ -2,10 +2,10 @@
 
 ## Automated checks
 
-Run the commands in README.md from a fresh checkout. The current suite includes 11 JavaScript and 11 Python tests, plus the sanitizer firmware harness. No personal backup, running agent, or connected keyboard is required for the JavaScript/Python/firmware host tests. VIA fixtures are synthetic.
+Run the commands in README.md from a fresh checkout. The current suite includes 11 JavaScript and 13 Python tests, plus the sanitizer firmware harness. No personal backup, running agent, or connected keyboard is required for the JavaScript/Python/firmware host tests. VIA fixtures are synthetic.
 
 - JavaScript: stable auto-fill, new agents, closure/shell return, completed turns, overflow/manual replacements, offline/loading reservations, stale revisions, and the actual native mod lifecycle with host mocks.
-- Python: protocol packets, freshness, physical mode/focus behavior, bridge-loop dispatch and shutdown, and read-only backup / validated restore against an emulated VIA device.
+- Python: protocol packets, freshness, physical mode/focus behavior, bridge-loop dispatch and shutdown, a real managed child with synthetic HID (singleton lock, pause, heartbeat expiry, and restart), and read-only backup / validated restore against an emulated VIA device.
 - Firmware host harness: actual keymap code compiled with AddressSanitizer and UndefinedBehaviorSanitizer; all nine slots, malformed packets, VIA passthrough, paired releases, timeout, mode acknowledgement/reconciliation, LED output, and RGB restoration.
 - ARM build: pinned upstream QMK target keychron/q0/plus:herdr. Binary and source hashes are in build-manifest.json.
 
@@ -21,4 +21,6 @@ Remaining first-use checks on each installation: verify all desired slot mapping
 
 The circle-key bootloader method (unplug, hold circle, reconnect) was confirmed on the project owner's pad.
 
-Live auto-fill validation also created a short-lived status-reporting fixture, observed its automatic assignment, destroyed only that fixture, and confirmed its slot was released while existing assignments remained unchanged. No user agent was interrupted. The service plist preserves custom app paths, and bridge tests verify activation failures remain visible.
+Live auto-fill validation also created a short-lived status-reporting fixture, observed its automatic assignment, destroyed only that fixture, and confirmed its slot was released while existing assignments remained unchanged. No user agent was interrupted. App-managed bridge supervision is the default; launcher errors and recovery are covered in the mod test. The service plist preserves custom app paths, and bridge tests verify activation failures remain visible.
+
+Live app-managed validation terminated only the identified controller bridge and observed a new PID reconnecting to the Q0 automatically. Maintenance pause kept it stopped through a full supervision interval; resume reconnected with assignments and mode preserved. Herdr reported no errors. App-quit heartbeat expiry is covered with a real companion process using synthetic HID; the user's desktop app and agents were not stopped.

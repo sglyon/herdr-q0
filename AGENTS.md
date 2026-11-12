@@ -18,7 +18,7 @@ Read [README.md](README.md) for installation and controls, and use the repo-loca
 | --- | --- |
 | Agent discovery, slot allocation, revisions | `mod/model.js` |
 | Native panel, shared persistence, state export, commands | `mod/main.js`, `mod/mod.json` |
-| USB framing, freshness, focus, bridge lifecycle | `bridge.py` |
+| USB framing, freshness, focus, bridge lifecycle | `bridge.py`, `bridge_lifecycle.py` |
 | Keys, final-frame LEDs, mode acknowledgement | `firmware/keymap.c`, `firmware/protocol.h`, `firmware/config.h` |
 | VIA layout/key labels and build options | `firmware/via-definition.json`, `firmware/rules.mk` |
 | Personal mod/layout installation | `install_mod.py` |
@@ -63,6 +63,8 @@ The harness compiles the actual keymap with hardware shims. It does not replace 
 For a deployed mod, run `herdr-app check` on its installed folder, then check the running app. A successful validator alone does not prove later asynchronous updates or rendered layout work. Screenshot paths may include private terminal content: keep them local and inspect before sharing.
 
 ## Runtime and hardware boundaries
+
+The default bridge is now panel-managed: the installed hidden `.bridge-config.json` supplies absolute local paths, the panel invokes a short launcher every five seconds, and `bridge.py --managed` exits on an expired snapshot or `.bridge-paused`. Pause with `bridge_lifecycle.py pause` before taking USB for VIA/probes/flashing; resume afterward. Do not assume a killed managed bridge will stay stopped while supervision is active.
 
 Inspect current state before stopping anything. The bridge may be running manually or under launchd; stop/restart only the identified bridge, preserving its custom paths. Avoid simultaneous HID clients: pause the bridge during VIA configuration, backup, probe, or restore, and resume it afterward if it was running.
 

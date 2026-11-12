@@ -4,8 +4,10 @@ import vm from 'node:vm';
 import { readFile } from 'node:fs/promises';
 
 test('real mod lifecycle: reactive status → atomic snapshot; commands reject stale mappings', async () => {
-  const context=vm.createContext({console,Date});
-  const saved=new Map(), files=new Map(), calls=[], errors=[], ids=[];
+  let now=Date.now(), launchResult={code:0,stdout:"running",stderr:""};
+  const context=vm.createContext({console,Date:{now:()=>now}});
+  const saved=new Map(), files=new Map(), calls=[], errors=[], ids=[], launches=[];
+  files.set("/herdr/mods/q0-agents/.bridge-config.json", JSON.stringify({python:"/repo/.venv/bin/python",launcher:"/repo/bridge_lifecycle.py"}));
   let deliver;
   const nativeAgents=[{address:'kenya/t1',status:'done',space_name:'API',title:'Fix'}];
   const nativeTerminals=[{address:'kenya/t1',state:'live',status:'done'}];
@@ -20,6 +22,7 @@ test('real mod lifecycle: reactive status → atomic snapshot; commands reject s
   }
   const host={agents:()=>nativeAgents,terminals:()=>nativeTerminals,machines:()=>nativeMachines,
     focused:()=>({agent:'kenya/t1'}),theme:()=>({}),shared:k=>saved.get(k),setShared:(k,v)=>saved.set(k,v),
+    exec:async (...args)=>{assert.ok(files.has("/herdr/mods/q0-agents/.state.json"));launches.push(args);return launchResult},
     appHome:()=>'/herdr',nextCommand:()=>new Promise(resolve=>{deliver=resolve}),run:(...args)=>calls.push(args),notify:()=>{},
     readTextFile:async p=>files.get(p)??null,writeTextFile:async(p,text,expected)=>{
       assert.equal(files.get(p)??null,expected);files.set(p,text);
@@ -38,6 +41,9 @@ test('real mod lifecycle: reactive status → atomic snapshot; commands reject s
   tick(cx);await flush();
   let s=JSON.parse(files.get('/herdr/mods/q0-agents/.state.json'));
   assert.equal(s.slots[0].address,'kenya/t1');assert.equal(s.slots[0].state,'done');
+  assert.equal(launches.length,1);
+  assert.equal(launches[0][0],"/repo/.venv/bin/python");
+  assert.deepEqual(Array.from(launches[0][1]),["/repo/bridge_lifecycle.py","ensure","--directory","/herdr/mods/q0-agents"]);
   const revision=s.revision;
   mod.render(cx);tick(cx);await flush();
   assert.equal(JSON.parse(files.get('/herdr/mods/q0-agents/.state.json')).revision,revision);
@@ -66,5 +72,14 @@ test('real mod lifecycle: reactive status → atomic snapshot; commands reject s
   mod.render(cx);tick(cx);await flush();
   s=JSON.parse(files.get('/herdr/mods/q0-agents/.state.json'));assert.equal(s.slots[1].address,null);
   assert.ok([...files.keys()].every(p=>p.split('/').at(-1).startsWith('.')));
+  assert.equal(launches.length,1); // Heartbeat ticks do not spawn a launcher each time.
+  now+=5001;launchResult={code:1,stdout:"",stderr:"launcher unavailable"};
+  tick(cx);await flush();
+  assert.match(mod.lifecycleError,/launcher unavailable/);
+  now+=5001;launchResult={code:0,stdout:"paused",stderr:""};
+  tick(cx);await flush();assert.match(mod.lifecycleError,/paused/);
+  now+=5001;launchResult={code:0,stdout:"started",stderr:""};
+  tick(cx);await flush();assert.equal(mod.lifecycleError,"");
+  assert.equal(launches.length,4); // A failed/exited bridge is retried; no overlapping launcher.
   assert.deepEqual(errors,[]);
 });

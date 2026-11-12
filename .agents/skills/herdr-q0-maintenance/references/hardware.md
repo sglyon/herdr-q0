@@ -25,7 +25,7 @@ Run the sanitizer host harness, then the ARM build. Refresh tracked BIN, ELF, an
 
 ### Read the installed firmware build version
 
-Pause the bridge/other HID clients first. The custom image implements VIA `get_keyboard_value` (`0x02`) / `firmware_version` (`0x04`); the response stores the uint32 value at bytes 2–5, big-endian:
+Pause panel management with `.venv/bin/python bridge_lifecycle.py pause`, wait for the bridge lock to be released, and stop any manual/service bridge and other HID clients first. The custom image implements VIA `get_keyboard_value` (`0x02`) / `firmware_version` (`0x04`); the response stores the uint32 value at bytes 2–5, big-endian:
 
 ```sh
 .venv/bin/python - <<'PY_VERSION'
@@ -53,7 +53,7 @@ Compare this value with `VIA_FIRMWARE_VERSION` in the source being evaluated; do
 
 ## Authorized flashing and rollback
 
-1. Identify whether the bridge is manual or serviced; stop the correct instance and close other USB configurators. Save current VIA configuration with the repository helper when appropriate. Keep personal backups local.
+1. Pause panel management with `bridge_lifecycle.py pause` and confirm its bridge has exited. Stop any manual/service bridge separately and close other USB configurators. Save current VIA configuration with the repository helper when appropriate. Keep personal backups local.
 2. Verify the image against its manifest, and have the exact Q0 Plus recovery image/configuration available.
 3. Tell the user when ready: **unplug, hold the circle key, reconnect USB, release**. This shortcut is confirmed on the project owner's pad. Hardware-reset access beneath `0` / `.` is an alternative in README.
 4. Inspect `dfu-util -l`. Confirm the expected runtime device disappeared and the intended STM32 bootloader appeared. Multiple alternate interfaces can belong to one physical serial; multiple physical devices require explicit selection/identification. Never guess a serial.

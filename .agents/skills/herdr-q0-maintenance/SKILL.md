@@ -13,7 +13,7 @@ Work from the checkout root (`git rev-parse --show-toplevel`). Read [AGENTS.md](
 | --- | --- | --- |
 | New/closed agents, stable keys, overflow | `mod/model.js`, model/lifecycle JS tests | Install mod; no flash |
 | Panel controls, live status, unread completion | `mod/main.js`, installed Herdr API definitions | Install, native-check, inspect screenshot |
-| M1 steals focus, agent activation, stale USB state | `bridge.py`, bridge-loop Python tests | Restart the identified bridge; no flash |
+| M1 steals focus, agent activation, stale USB state | `bridge.py`, `bridge_lifecycle.py`, bridge-loop Python tests | Pause/resume management; no flash |
 | Login behavior, custom app/checkout location | `configure_service.py`, service tests | Regenerate/install service only within requested scope |
 | Key mapping, RGB output, pending-mode timing | `firmware/keymap.c`, firmware host harness | ARM build; flash only when authorized |
 | VIA settings or recovery | `via_config.py`, matching firmware/definition | Separate configuration mutation from flashing |

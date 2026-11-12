@@ -1,6 +1,6 @@
 import { View, div } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { agents, terminals, machines, focused, theme, shared, setShared, appHome, nextCommand, run, notify, readTextFile, writeTextFile } from "herdr";
+import { agents, terminals, machines, focused, theme, shared, setShared, appHome, nextCommand, run, notify, readTextFile, writeTextFile, exec } from "herdr";
 import { STORE, assignments, candidates, snapshot, assign, reconcile, nextRevision } from "./model.js";
 
 export default class Q0Agents extends View {
@@ -10,6 +10,9 @@ export default class Q0Agents extends View {
     this.bridge = "Bridge not running";
     this.error = "";
     this.busy = false;
+    this.launchBusy = false;
+    this.nextLaunch = 0;
+    this.lifecycleError = "";
     this.cached = null;
     this.directory = `${appHome()}/mods/q0-agents`;
     // Only transport heartbeat is periodic. agents()/terminals() are read reactively in render.
@@ -47,6 +50,7 @@ export default class Q0Agents extends View {
         const path = `${this.directory}/.state.json`;
         const expected = await readTextFile(path);
         await writeTextFile(path, JSON.stringify(body), expected);
+        this.manageBridge(cx);
         let label = "Bridge not running";
         try {
           const b = JSON.parse(await readTextFile(`${this.directory}/.bridge-status.json`));
@@ -57,6 +61,22 @@ export default class Q0Agents extends View {
         const message = `Cannot update keyboard: ${String(e)}`;
         if (this.error !== message) { this.error = message; cx.notify(); }
       } finally { this.busy = false; }
+    });
+  }
+
+  manageBridge(cx) {
+    if (this.launchBusy || Date.now() < this.nextLaunch) return;
+    this.nextLaunch = Date.now() + 5000;
+    this.launchBusy = true;
+    cx.spawn(async cx => {
+      try {
+        const config = JSON.parse(await readTextFile(`${this.directory}/.bridge-config.json`));
+        if (!config) throw new Error("Re-run install_mod.py to configure the bridge");
+        const result = await exec(config.python, [config.launcher, "ensure", "--directory", this.directory], { timeout: 3000 });
+        if (result.code !== 0) throw new Error(result.stderr || "Bridge launcher failed");
+        this.lifecycleError = result.stdout.trim() === "paused" ? "Bridge paused for maintenance" : "";
+      } catch (e) { this.lifecycleError = `Cannot supervise bridge: ${String(e)}`; }
+      finally { this.launchBusy = false; cx.notify(); }
     });
   }
 
@@ -118,7 +138,7 @@ export default class Q0Agents extends View {
           this.setMode(shared("q0-agents.enabled") === false, cx);
         }, t),
       ]),
-      div().text_size(11).text_color(this.error ? t.ansi1 : t.muted).child(this.error || this.bridge),
+      div().text_size(11).text_color(this.error ? t.ansi1 : t.muted).child(this.error || this.lifecycleError || this.bridge),
       v_flex().id("slots").gap(6).children([1,2,3,4,5,6,7,8,9].map(row)),
       h_flex().gap(4).children([
         this.button("assign-current", `Assign current → ${this.selected}`, (_e, cx) => this.assignCurrent(this.selected, cx), t),

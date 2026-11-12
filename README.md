@@ -30,13 +30,14 @@ Open Herdr, then install the personal mod and layout:
 
 This copies `mod/` into `~/.config/herdr-app/mods/q0-agents`, runs Herdr's native validator, and creates/switches to a personal `q0-agents` layout cloned from `main`. It preserves the shipped layouts and mods. Re-running the installer updates only this project's mod. `HERDR_APP_HOME` is supported for a non-default Herdr configuration directory.
 
-Installation alone does not flash the keyboard or start the USB bridge. The panel can populate assignments before flashing.
+Installation configures the panel to start and supervise the USB bridge automatically. It runs only while the panel exports fresh state; closing Herdr or removing the panel makes it exit once its heartbeat expires after three seconds; an in-flight USB or desktop command can delay process exit. The panel retries a stopped bridge every five seconds. No login service is required. Installation does not flash the keyboard. Pass `--app-path /path/to/Herdr.app` to the installer for a custom app location.
 
 ## Back up your current configuration
 
-Close VIA/Keychron Launcher and stop any running bridge before configuration operations:
+Close VIA/Keychron Launcher and pause bridge management before configuration operations. A managed bridge exits promptly after pausing; stop any manually started bridge or optional service separately. Confirm `.bridge.lock` has no holder (`lsof -t ~/.config/herdr-app/mods/q0-agents/.bridge.lock`) before opening a USB configurator.
 
 ```sh
+.venv/bin/python bridge_lifecycle.py pause
 mkdir -p backups
 .venv/bin/python via_config.py --backup backups/original-via.json
 ```
@@ -82,20 +83,30 @@ dfu-util -d 0483:df11 -a 0 -s 0x08000000:leave -D firmware/keychron_q0_plus_herd
 
 Keep it connected until the download completes. The updater leaves bootloader mode afterward. Before starting the bridge, verify ordinary numbers and the volume knob work.
 
-## Start the bridge
+## App-managed bridge
+
+With the Q0 panel installed, Herdr starts the bridge and checks it every five seconds. If the bridge crashes, the panel starts another. If Herdr quits/crashes or the panel is removed, the bridge detects its expired heartbeat and exits, releasing USB and restoring number mode. This follows the desktop panel, rather than Herdr Core, because the panel owns the assignments and mode. Core and your agents keep running independently.
+
+After flashing or VIA maintenance, close the configurator and resume:
+
+```sh
+.venv/bin/python bridge_lifecycle.py resume
+```
+
+The panel should show `Keyboard ready · agent mode` (or number mode). Pause/resume does not reset assignments or toggle the chosen mode. An unplugged keypad is retried automatically while the panel remains active. To change checkout/app paths, pause, re-run `install_mod.py` from the new checkout with the desired `--app-path`, then resume. Runtime paths are stored locally in the installed mod's hidden `.bridge-config.json`.
+
+For a manual diagnostic session, pause management first and wait for the bridge lock to be released, then:
 
 ```sh
 .venv/bin/python bridge.py --probe
-.venv/bin/python bridge.py
+.venv/bin/python bridge.py --app-cli "$(command -v herdr-app)"
 ```
 
-The probe must report `Q0H1 firmware verified`. The bridge then reads the native mod's local state and updates the keypad. Ctrl-C stops it. Only one bridge instance can run at a time.
-
-If Herdr is installed outside `~/Applications/Herdr.app`, pass `--app-path /Applications/Herdr.app` (or the actual bundle path). `--app-cli` accepts an absolute path if `herdr-app` is not on the bridge's PATH.
+The probe must report `Q0H1 firmware verified`. Ctrl-C stops a manual bridge. It remains independent of app lifetime unless `--managed` is passed. Only one bridge instance can own USB at a time. `--app-path` accepts a custom Herdr bundle location.
 
 ### Optional login service
 
-Generate a launch agent for the current checkout location, install it, then start it:
+An alternative for an always-running bridge is the optional login service. This intentionally outlives Herdr; app-managed operation above is the default. Pause panel management before configuring it. Generate a launch agent for the current checkout location, install it, then start it:
 
 ```sh
 .venv/bin/python configure_service.py generate
@@ -149,7 +160,7 @@ Assignments persist in Herdr shared state. A wiped/replaced core can reuse termi
 
 ## VIA
 
-The firmware retains four dynamic layers, macros, lighting controls, and encoder mapping. Pause the bridge while configuring VIA, then import `firmware/via-definition.json` through VIA's Design tab if automatic detection is unavailable.
+The firmware retains four dynamic layers, macros, lighting controls, and encoder mapping. Pause management and wait for the bridge to exit while configuring VIA, then import `firmware/via-definition.json` through VIA's Design tab if automatic detection is unavailable.
 
 - M1 is custom keycode `0x7E00` (Herdr mode toggle).
 - M5 is `MO(2)`; layer 2 is initially transparent so it bypasses agent interception.
@@ -203,7 +214,7 @@ python3 build.py --qmk-tree ../qmk_firmware --toolchain /path/to/arm-toolchain -
 
 ## Remove
 
-Stop the bridge/service and switch back to the standard layout:
+Pause bridge management, stop any manual bridge/service, and switch back to the standard layout:
 
 ```sh
 herdr-app do layout.switch --name main

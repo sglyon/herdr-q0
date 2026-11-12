@@ -41,6 +41,10 @@ Source uses `agents()` for Herdr's unread/seen state and raw terminal status for
 
 ## Bridge or service update
 
+The default installation is panel-managed. `install_mod.py` writes hidden `.bridge-config.json` with absolute local paths. After exporting fresh state, the mod runs `bridge_lifecycle.py ensure` at most every five seconds. The short launcher respects the lock and maintenance pause, then starts a detached `bridge.py --managed`; the managed loop exits when state expires or `.bridge-paused` exists. The detached child does not depend on a Codex command session, and the expiring heartbeat covers app crashes. Herdr `exec` has a maximum ten-minute timeout, so do not use a single long-running `exec` as supervision.
+
+For maintenance run `.venv/bin/python bridge_lifecycle.py pause` and confirm the lock is released. Manual/launchd bridges must be stopped separately. Deploy code/config, then `.venv/bin/python bridge_lifecycle.py resume`; check a new heartbeat and command line containing `--managed`. Test recovery by stopping only that identified bridge and watching the panel start a new PID. Pause/resume and recovery must preserve assignments and mode. Closing/removing the panel stops exports; the managed bridge exits after its three-second heartbeat expires (in-flight USB/desktop commands can delay process exit). A test with synthetic HID verifies this without quitting the user's app or touching agents.
+
 Run the Python suite before restarting. Preserve custom arguments and whether the process was manual or a service. Ctrl-C/SIGINT lets a manual bridge send disable/close its handle; only signal the positively identified process. A single-instance lock prevents duplicate bridges.
 
 `configure_service.py generate` and `install` prepare files but do not start a service; `start` and `stop` change the running service. Generation supports `--app-path` and `HERDR_APP_HOME`. Reinstall an updated plist after changing paths, and use service management rather than fighting launchd's KeepAlive restart.

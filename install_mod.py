@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """Install only our personal mod; validate before cloning a layout. Never flashes."""
+import argparse
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
 
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--app-path', type=Path, help='Herdr.app bundle for foreground activation')
+args=parser.parse_args()
 root=Path(__file__).resolve().parent
+python=root/'.venv/bin/python'
+cli=shutil.which('herdr-app')
+choices=[Path.home()/'Applications/Herdr.app',Path('/Applications/Herdr.app')]
+app=args.app_path.expanduser().resolve() if args.app_path else next((p for p in choices if p.exists()),None)
+if not python.exists() or not cli or app is None or not app.exists():
+    raise SystemExit('Create .venv, install herdr-app, and supply --app-path if Herdr.app is not in an Applications folder')
 home=Path(os.environ.get('HERDR_APP_HOME',str(Path.home()/'.config/herdr-app'))).expanduser()
 (root/'backups').mkdir(exist_ok=True)
 dest=home/'mods/q0-agents'
@@ -15,6 +25,11 @@ if dest.exists() and not (dest/'q0-owner.json').exists():
 dest.mkdir(parents=True,exist_ok=True)
 for name in ['main.js','model.js','mod.json']:
     shutil.copy2(root/'mod'/name,dest/name)
+config={'python':str(python),'launcher':str(root/'bridge_lifecycle.py'),
+        'arguments':[str(python),str(root/'bridge.py'),'--directory',str(dest),
+                     '--app-cli',str(cli),'--app-path',str(app)]}
+(dest/'.bridge-config.json').write_text(json.dumps(config))
+(dest/'.bridge-config.json').chmod(0o600)
 runtime=dest/'.state.json'
 runtime.touch(mode=0o600,exist_ok=True)
 runtime.chmod(0o600)
