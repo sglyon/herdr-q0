@@ -4,6 +4,8 @@ Turn a Keychron Q0 Plus into a nine-agent control surface for the **Herdr deskto
 
 This uses Herdr desktop mods and `herdr-app` commands, backed by Herdr Core. It does not use the older `herdr` TUI.
 
+For the build story and hardware lessons, read [Giving My Coding Agents Physical Keys: A QMK Numpad for Herdr](https://lumistlabs.ai/blog/coding-agents-physical-keys/).
+
 ## Requirements
 
 - A **Keychron Q0 Plus**, connected by USB. This firmware targets `keychron/q0/plus`, not Q0, Q0 Max, or another keyboard.
